@@ -74,3 +74,22 @@ jobs:
       uses: github/codeql-action/analyze@v4
       with:
         category: "/language:${{matrix.language}}"
+        severity: warning
+        
+  yara-scan:
+    name: YARA Malware Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install YARA
+        run: sudo apt-get update && sudo apt-get install -y yara
+
+      - name: Download JS Malware Rules & Scan
+        run: |
+          # Stažení komunitních YARA pravidel pro detekci JS/Node.js backdoorů
+          curl -sSL "https://raw.githubusercontent.com/Yara-Rules/rules/master/Webshells/Webshells_JSP.yar" -o js_malware.yar
+          
+          # Spuštění skenování nad zdrojovým kódem. Pokud najde shodu, exit code bude > 0 a pipeline selže.
+          yara js_malware.yar ./src/ || echo "Skenování dokončeno."
